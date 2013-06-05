@@ -82,18 +82,20 @@ public class RequiredRoleInterceptor implements Serializable {
 	@AroundInvoke
 	public Object manage(final InvocationContext ic) throws Exception {
 		List<String> roles = getRoles(ic);
-
+		boolean checkall = checkAll(ic);
 		if (getSecurityContext().isLoggedIn()) {
 			getLogger().info(
 					getBundle().getString("has-role-verification", getSecurityContext().getCurrentUser().getName(),
 							roles));
 		}
+		
 
 		List<String> userRoles = new ArrayList<String>();
-
+		
 		for (String role : roles) {
 			if (getSecurityContext().hasRole(role)) {
 				userRoles.add(role);
+				
 			}
 		}
 
@@ -131,6 +133,19 @@ public class RequiredRoleInterceptor implements Serializable {
 		}
 
 		return Arrays.asList(roles);
+	}
+	
+	private boolean checkAll(InvocationContext ic){
+		boolean checkall = false;
+		if (ic.getMethod().getAnnotation(RequiredRole.class) == null) {
+			if (ic.getTarget().getClass().getAnnotation(RequiredRole.class) != null) {
+				checkall = ic.getTarget().getClass().getAnnotation(RequiredRole.class).checkall();
+			}
+		} else {
+			checkall = ic.getMethod().getAnnotation(RequiredRole.class).checkall();
+		}
+
+		return checkall;
 	}
 
 	private SecurityContext getSecurityContext() {
